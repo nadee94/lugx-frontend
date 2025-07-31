@@ -28,11 +28,23 @@ jobs:
         push: true
         tags: ${{ secrets.DOCKER_USERNAME }}/lugx-frontend:latest
 
-    - name: Verify SSH Key
+    - name: Validate SSH Key
       run: |
-        echo "Verifying SSH key format..."
-        echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" | head -n 1
-        echo "Key length: $(echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" | wc -l) lines"
+        echo "Validating SSH key format..."
+        mkdir -p ~/.ssh
+        echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+        chmod 600 ~/.ssh/deploy_key
+        ssh-keygen -l -f ~/.ssh/deploy_key || (echo "Invalid SSH key format"; exit 1)
+        echo "Key is valid"
+
+    - name: Show Diagnostic Info
+      run: |
+        echo "EC2_HOST: ${{ secrets.EC2_HOST }}"
+        echo "EC2_USER: ${{ secrets.EC2_USER }}"
+        echo "Key prefix: ${SECRET_EC2_SSH_PRIVATE_KEY:0:20}..."
+        echo "Key suffix: ...${SECRET_EC2_SSH_PRIVATE_KEY: -20}"
+      env:
+        SECRET_EC2_SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
 
     - name: Deploy to EC2 via SSH
       uses: appleboy/ssh-action@v1.0.0
@@ -40,20 +52,49 @@ jobs:
         host: ${{ secrets.EC2_HOST }}
         username: ${{ secrets.EC2_USER }}
         key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+        port: 22
+        timeout: 30s
+        script_timeout: 5m
+        envs: CI=true
+        debug: true
         script: |
-          echo "=== Starting Deployment ==="
-          echo "Current user: $(whoami)"
-          echo "Working directory: $(pwd)"
-          echo "Kubectl version: $(kubectl version --client --short)"
+          echo "=== SYSTEM INFO ==="
+          echo "Hostname: $(hostname)"
+          echo "User: $(whoami)"
+          echo "Date: $(date)"
           
-          cd ~/lugx-frontend || exit 1
-          echo "Directory contents:"
+          echo "=== ENVIRONMENT ==="
+          env | sort
+          
+          echo "=== DISK SPACE ==="
+          df -h
+          
+          echo "=== KUBECTL ACCESS ==="
+          kubectl config current-context
+          kubectl auth can-i --list
+          
+          echo "=== DEPLOYMENT START ==="
+          cd ~/lugx-frontend || { echo "Directory missing!"; exit 1; }
+          
+          echo "=== KUBERNETES MANIFESTS ==="
           ls -la
+          cat deployement-iit-nginx-image.yml
+          cat service-iit-nginx.yml
+          cat iit-ingress.yml
           
-          echo "Applying Kubernetes manifests..."
-          kubectl apply -f deployement-iit-nginx-image.yml
-          kubectl apply -f service-iit-nginx.yml
+          echo "=== APPLYING MANIFESTS ==="
+          kubectl apply -f deployement-iit-nginx-image.yml && \
+          kubectl apply -f service-iit-nginx.yml && \
           kubectl apply -f iit-ingress.yml
           
-          echo "=== Deployment Complete ==="
+          echo "=== VERIFICATION ==="
           kubectl get pods -A
+          kubectl get svc -A
+          kubectl get ingress -A
+          
+          echo "=== DEPLOYMENT COMPLETE ==="
+
+    - name: Verify Deployment
+      run: |
+        echo "Checking deployment status..."
+        # Add any post-deployment verification here
