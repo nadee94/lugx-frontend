@@ -28,14 +28,67 @@ jobs:
         push: true
         tags: ${{ secrets.DOCKER_USERNAME }}/lugx-frontend:latest
 
-    - name: Deploy to EC2 via SSH and run kubectl apply
-      uses: appleboy/ssh-action@v0.1.6
+    - name: Validate SSH Key
+      run: |
+        echo "Validating SSH key format..."
+        mkdir -p ~/.ssh
+        echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+        chmod 600 ~/.ssh/deploy_key
+        ssh-keygen -l -f ~/.ssh/deploy_key || (echo "Invalid SSH key format"; exit 1)
+        echo "Key is valid"
+
+    - name: Show Diagnostic Info
+      run: |
+        echo "EC2_HOST: ${{ secrets.EC2_HOST }}"
+        echo "EC2_USER: ${{ secrets.EC2_USER }}"
+        echo "Key prefix: ${SECRET_EC2_SSH_PRIVATE_KEY:0:20}..."
+        echo "Key suffix: ...${SECRET_EC2_SSH_PRIVATE_KEY: -20}"
+      env:
+        SECRET_EC2_SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+
+    - name: Deploy to EC2 via SSH
+      uses: appleboy/ssh-action@v1.0.0
       with:
         host: ${{ secrets.EC2_HOST }}
         username: ${{ secrets.EC2_USER }}
         key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+        port: 22
+        timeout: 30s
+        script_timeout: 5m
+        envs: CI=true
+        debug: true
         script: |
-          cd ~/lugx-frontend
-          kubectl apply -f deployement-iit-nginx-image.yml
-          kubectl apply -f service-iit-nginx.yml
-          kubectl apply -f iit-ingress.yml
+          echo "=== BLUE-GREEN DEPLOYMENT START ==="
+          
+          CURRENT_COLOR=$(kubectl get svc lugx-frontend -o jsonpath='{.spec.selector.color}' || echo "blue")
+          
+          if [ "$CURRENT_COLOR" = "blue" ]; then
+            NEW_COLOR="green"
+          else
+            NEW_COLOR="blue"
+          fi
+          echo "Deploying to $NEW_COLOR environment..."
+
+          # Apply the new deployment manifest
+          kubectl apply -f ~/lugx-frontend/deployment-${NEW_COLOR}.yaml
+
+          # Wait for the new deployment to become ready
+          kubectl rollout status deployment/lugx-frontend-${NEW_COLOR} --timeout=180s
+
+          # Switch traffic to the new version
+          kubectl patch svc lugx-frontend -p "{\"spec\":{\"selector\":{\"color\":\"${NEW_COLOR}\"}}}"
+
+          # Optionally scale down the old version
+          kubectl scale deployment/lugx-frontend-${CURRENT_COLOR} --replicas=0
+
+          echo "=== VERIFICATION ==="
+          kubectl get pods -l app=lugx-frontend -L color
+          kubectl get svc lugx-frontend
+          kubectl get ingress
+
+          echo "=== DEPLOYMENT COMPLETE ==="
+
+    - name: Verify Deployment
+      run: |
+        echo "Checking deployment status..."
+        # Add any post-deployment verification here
