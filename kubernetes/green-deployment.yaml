@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: lugx-frontend-green
+  name: lugx-frontend-blue
   labels:
     app: lugx-frontend
     color: green
@@ -19,6 +19,6 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: nadeeshadulanjanee/lugx-frontend:latest
+        image: ${{ secrets.DOCKER_USERNAME }}/lugx-frontend:${{ github.sha }}
         ports:
         - containerPort: 80
