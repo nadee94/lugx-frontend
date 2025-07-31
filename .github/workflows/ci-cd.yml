@@ -1,3 +1,4 @@
+
 name: CI/CD for Lugx Frontend
 
 on:
@@ -58,34 +59,37 @@ jobs:
         envs: CI=true
         debug: true
         script: |
-          echo "=== SYSTEM INFO ==="
-          echo "Hostname: $(hostname)"
-          echo "User: $(whoami)"
-          echo "Date: $(date)"
+          # ===== BLUE-GREEN ADDITIONS START =====
+          # Determine current active color
+          CURRENT_COLOR=$(kubectl get svc lugx-frontend -o jsonpath='{.spec.selector.color}' || echo "blue")
+							  
           
-          echo "=== ENVIRONMENT ==="
-          env | sort
+          # Set new color (the inactive one)
+          if [ "$CURRENT_COLOR" = "blue" ]; then
+            NEW_COLOR="green"
+          else
+            NEW_COLOR="blue"
+          fi
+          echo "Deploying to $NEW_COLOR environment"
           
-          echo "=== DISK SPACE ==="
-          df -h
+          # Apply new deployment
+          kubectl apply -f ~/lugx-frontend/deployment-$NEW_COLOR.yaml
           
-          echo "=== KUBECTL ACCESS ==="
-          kubectl config current-context
-          kubectl auth can-i --list
+          # Wait for rollout
+          kubectl rollout status deployment/lugx-frontend-$NEW_COLOR --timeout=180s
+								   
           
-          echo "=== DEPLOYMENT START ==="
-          cd ~/lugx-frontend || { echo "Directory missing!"; exit 1; }
+          # Switch traffic
+          kubectl patch svc lugx-frontend -p '{"spec":{"selector":{"color":"'$NEW_COLOR'"}}}'
           
-          echo "=== KUBERNETES MANIFESTS ==="
-          ls -la
-          cat deployement-iit-nginx-image.yml
-          cat service-iit-nginx.yml
-          cat iit-ingress.yml
+          # Optional: Scale down old deployment
+          kubectl scale deployment/lugx-frontend-$CURRENT_COLOR --replicas=0
+          # ===== BLUE-GREEN ADDITIONS END =====
+								   
+							 
           
-          echo "=== APPLYING MANIFESTS ==="
-          kubectl apply -f deployement-iit-nginx-image.yml && \
-          kubectl apply -f service-iit-nginx.yml && \
-          kubectl apply -f iit-ingress.yml
+          # [Keep your existing verification]
+												
           
           echo "=== VERIFICATION ==="
           kubectl get pods -A
