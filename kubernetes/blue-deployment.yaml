@@ -19,6 +19,6 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: yourusername/lugx-frontend:latest
+        image: ${{ secrets.DOCKER_USERNAME }}/lugx-frontend:${{ github.sha }}
         ports:
         - containerPort: 80
