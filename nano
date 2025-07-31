@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: iit-nginx-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: iit-nginx
+  template:
+    metadata:
+      labels:
+        app: iit-nginx
+    spec:
+      containers:
+        - name: iit-nginx-container
+          image: nadeeshadulanjanee/iit-nginx-static
+          ports:
+            - containerPort: 80
