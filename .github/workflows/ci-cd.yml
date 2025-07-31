@@ -1,4 +1,3 @@
-
 name: CI/CD for Lugx Frontend
 
 on:
@@ -62,9 +61,7 @@ jobs:
           echo "=== BLUE-GREEN DEPLOYMENT START ==="
           
           CURRENT_COLOR=$(kubectl get svc lugx-frontend -o jsonpath='{.spec.selector.color}' || echo "blue")
-		 
-		  
-											
+          
           if [ "$CURRENT_COLOR" = "blue" ]; then
             NEW_COLOR="green"
           else
@@ -78,27 +75,20 @@ jobs:
           # Wait for the new deployment to become ready
           kubectl rollout status deployment/lugx-frontend-${NEW_COLOR} --timeout=180s
 
-		  
           # Switch traffic to the new version
           kubectl patch svc lugx-frontend -p "{\"spec\":{\"selector\":{\"color\":\"${NEW_COLOR}\"}}}"
 
           # Optionally scale down the old version
           kubectl scale deployment/lugx-frontend-${CURRENT_COLOR} --replicas=0
 
-		   
-		
-		  
-											 
-			
-		  
           echo "=== VERIFICATION ==="
-          kubectl get pods -A
-          kubectl get svc -A
-          kubectl get ingress -A
+          kubectl get pods -l app=lugx-frontend -L color
+          kubectl get svc lugx-frontend
+          kubectl get ingress
 
           echo "=== DEPLOYMENT COMPLETE ==="
 
     - name: Verify Deployment
       run: |
         echo "Checking deployment status..."
-        # (Optional) Add curl check, smoke tests, etc.
+        # Add any post-deployment verification here
