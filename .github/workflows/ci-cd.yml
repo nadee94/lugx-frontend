@@ -28,13 +28,14 @@ jobs:
         push: true
         tags: ${{ secrets.DOCKER_USERNAME }}/lugx-frontend:latest
 
-    - name: Setup kubeconfig
-      run: |
-        mkdir -p ~/.kube
-        echo "${{ secrets.KUBECONFIG }}" | base64 -d > ~/.kube/config
-
-    - name: Deploy to Kubernetes
-      run: |
-        kubectl apply -f deployement-iit-nginx-image.yml
-        kubectl apply -f service-iit-nginx.yml
-        kubectl apply -f iit-ingress.yml
+    - name: Deploy to EC2 via SSH and run kubectl apply
+      uses: appleboy/ssh-action@v0.1.6
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USER }}
+        key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+        script: |
+          cd ~/lugx-frontend
+          kubectl apply -f deployement-iit-nginx-image.yml
+          kubectl apply -f service-iit-nginx.yml
+          kubectl apply -f iit-ingress.yml
