@@ -59,46 +59,46 @@ jobs:
         envs: CI=true
         debug: true
         script: |
-          # ===== BLUE-GREEN ADDITIONS START =====
-          # Determine current active color
-          CURRENT_COLOR=$(kubectl get svc lugx-frontend -o jsonpath='{.spec.selector.color}' || echo "blue")
-							  
+          echo "=== BLUE-GREEN DEPLOYMENT START ==="
           
-          # Set new color (the inactive one)
+          CURRENT_COLOR=$(kubectl get svc lugx-frontend -o jsonpath='{.spec.selector.color}' || echo "blue")
+		 
+		  
+											
           if [ "$CURRENT_COLOR" = "blue" ]; then
             NEW_COLOR="green"
           else
             NEW_COLOR="blue"
           fi
-          echo "Deploying to $NEW_COLOR environment"
-          
-          # Apply new deployment
-          kubectl apply -f ~/lugx-frontend/deployment-$NEW_COLOR.yaml
-          
-          # Wait for rollout
-          kubectl rollout status deployment/lugx-frontend-$NEW_COLOR --timeout=180s
-								   
-          
-          # Switch traffic
-          kubectl patch svc lugx-frontend -p '{"spec":{"selector":{"color":"'$NEW_COLOR'"}}}'
-          
-          # Optional: Scale down old deployment
-          kubectl scale deployment/lugx-frontend-$CURRENT_COLOR --replicas=0
-          # ===== BLUE-GREEN ADDITIONS END =====
-								   
-							 
-          
-          # [Keep your existing verification]
-												
-          
+          echo "Deploying to $NEW_COLOR environment..."
+
+          # Apply the new deployment manifest
+          kubectl apply -f ~/lugx-frontend/deployment-${NEW_COLOR}.yaml
+
+          # Wait for the new deployment to become ready
+          kubectl rollout status deployment/lugx-frontend-${NEW_COLOR} --timeout=180s
+
+		  
+          # Switch traffic to the new version
+          kubectl patch svc lugx-frontend -p "{\"spec\":{\"selector\":{\"color\":\"${NEW_COLOR}\"}}}"
+
+          # Optionally scale down the old version
+          kubectl scale deployment/lugx-frontend-${CURRENT_COLOR} --replicas=0
+
+		   
+		
+		  
+											 
+			
+		  
           echo "=== VERIFICATION ==="
           kubectl get pods -A
           kubectl get svc -A
           kubectl get ingress -A
-          
+
           echo "=== DEPLOYMENT COMPLETE ==="
 
     - name: Verify Deployment
       run: |
         echo "Checking deployment status..."
-        # Add any post-deployment verification here
+        # (Optional) Add curl check, smoke tests, etc.
