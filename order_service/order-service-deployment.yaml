@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: order-service
+  template:
+    metadata:
+      labels:
+        app: order-service
+    spec:
+      containers:
+        - name: order-service
+          image: nadeeshadulanjanee/order-service:latest  # Replace with your actual Docker Hub image if pushed
+          ports:
+            - containerPort: 3000
+          env:
+            - name: DB_HOST
+              value: "postgres"
+            - name: DB_USER
+              value: "nadeesha"
+            - name: DB_PASSWORD
+              value: "secret123"
+            - name: DB_NAME
+              value: "ordersdb"
