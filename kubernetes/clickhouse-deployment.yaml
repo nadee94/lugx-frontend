@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: clickhouse
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: clickhouse
+  template:
+    metadata:
+      labels:
+        app: clickhouse
+    spec:
+      containers:
+      - name: clickhouse
+        image: clickhouse/clickhouse-server:latest
+        ports:
+        - containerPort: 8123
+          name: http
+          protocol: TCP
+        env:
+        - name: CLICKHOUSE_PASSWORD
+          value: "your_secure_password"
+        resources:
+          limits:
+            memory: "4Gi"
+            cpu: "2"
+          requests:
+            memory: "2Gi"
+            cpu: "1"
+        readinessProbe:
+          exec:
+            command:
+            - clickhouse-client
+            - --query=SELECT 1
+          initialDelaySeconds: 30
+          periodSeconds: 5
+          timeoutSeconds: 1
+        livenessProbe:
+          exec:
+            command:
+            - clickhouse-client
+            - --query=SELECT 1
+          initialDelaySeconds: 40
+          periodSeconds: 10
+        volumeMounts:
+        - name: clickhouse-data
+          mountPath: /var/lib/clickhouse
+      volumes:
+      - name: clickhouse-data
+        persistentVolumeClaim:
+          claimName: clickhouse-pvc
