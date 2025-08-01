@@ -1,0 +1,4 @@
+node_modules/
+kubectl
+.env
+.DS_Store
