@@ -3,25 +3,23 @@ kind: Ingress
 metadata:
   name: iit-ingress
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /  # Simplified rewrite
-    nginx.ingress.kubernetes.io/cors-allow-origin: "https://app.iit.cloud"
     nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "https://app.iit.cloud"
 spec:
   ingressClassName: nginx
   rules:
     - host: app.iit.cloud
       http:
         paths:
-          # Analytics endpoint - exact path match
-          - path: /api/track
-            pathType: Exact
+          # Analytics API
+          - path: /event                       # <- regex & capture
+            pathType: ImplementationSpecific                # <- required for regex
             backend:
               service:
                 name: analytics-service
                 port:
                   number: 3000
 
-          # Order service
           - path: /orders
             pathType: Prefix
             backend:
@@ -30,7 +28,6 @@ spec:
                 port:
                   number: 3000
 
-          # Frontend catch-all
           - path: /
             pathType: Prefix
             backend:

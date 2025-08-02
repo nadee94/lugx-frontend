@@ -2,3 +2,4 @@ node_modules/
 kubectl
 .env
 .DS_Store
+ch_data/

@@ -220,5 +220,29 @@ https://templatemo.com/tm-589-lugx-gaming
   <script src="assets/js/counter.js"></script>
   <script src="assets/js/custom.js"></script>
 
-  </body>
+
+
+
+<script>
+(() => {
+  const uid = localStorage.getItem('lugx_uid') || ('u_' + Math.random().toString(36).slice(2, 10));
+  localStorage.setItem('lugx_uid', uid);
+
+  fetch('http://app.iit.cloud/event', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      event: 'page_view',
+      path: window.location.pathname + window.location.search,
+      user_id: uid
+    })
+  }).catch(console.error);
+})();
+</script>
+
+
+</body>
+
+
+
 </html>
