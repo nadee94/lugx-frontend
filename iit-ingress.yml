@@ -11,9 +11,8 @@ spec:
     - host: app.iit.cloud
       http:
         paths:
-          # Analytics API
-          - path: /event                       # <- regex & capture
-            pathType: ImplementationSpecific                # <- required for regex
+          - path: /event
+            pathType: ImplementationSpecific
             backend:
               service:
                 name: analytics-service
@@ -28,6 +27,14 @@ spec:
                 port:
                   number: 3000
 
+          - path: /games          # NEW
+            pathType: Prefix
+            backend:
+              service:
+                name: game-service
+                port:
+                  number: 3001
+
           - path: /
             pathType: Prefix
             backend:
@@ -35,3 +42,4 @@ spec:
                 name: iit-nginx-service
                 port:
                   number: 80
+
