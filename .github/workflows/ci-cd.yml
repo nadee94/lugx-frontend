@@ -77,15 +77,15 @@ jobs:
           set -e
           WORK_DIR=~/lugx-frontend/deploy
           IMAGE=${{ secrets.DOCKER_USERNAME }}/lugx-frontend:${{ github.sha }}
-          mkdir -p $WORK_DIR
+          mkdir -p "$WORK_DIR"
 
-          # --- decide next colour
+          # decide next colour
           CURRENT=$(kubectl get svc lugx-frontend -o jsonpath='{.spec.selector.color}' 2>/dev/null || echo "blue")
           [ "$CURRENT" = "blue" ] && NEW=green || NEW=blue
           OLD=$CURRENT
 
-          # --- generate NEW colour deployment in-line
-          cat > $WORK_DIR/frontend-${NEW}.yaml <<EOF
+          # generate NEW colour deployment in-line
+          cat > "$WORK_DIR/frontend-${NEW}.yaml" <<EOF
           apiVersion: apps/v1
           kind: Deployment
           metadata:
@@ -102,7 +102,10 @@ jobs:
                 - name: frontend
                   image: ${IMAGE}
                   ports: [{ containerPort: 80 }]
-          ---
+          EOF
+
+          # create/update service once
+          cat > "$WORK_DIR/frontend-svc.yaml" <<EOF
           apiVersion: v1
           kind: Service
           metadata:
@@ -113,23 +116,19 @@ jobs:
             ports: [{ port: 80, targetPort: 80 }]
           EOF
 
-          # --- apply & wait
-          kubectl apply -f $WORK_DIR/frontend-${NEW}.yaml
+          # apply both
+          kubectl apply -f "$WORK_DIR/frontend-${NEW}.yaml"
+          kubectl apply -f "$WORK_DIR/frontend-svc.yaml"
           kubectl rollout status deployment/lugx-frontend-${NEW} --timeout=180s
 
-          # --- switch traffic
+          # switch traffic
           kubectl patch svc lugx-frontend -p "{\"spec\":{\"selector\":{\"color\":\"${NEW}\"}}}"
 
-          # --- scale old colour to zero (optional)
+          # scale old colour to zero
           kubectl scale deployment/lugx-frontend-${OLD} --replicas=0 2>/dev/null || true
 
           echo "Frontend switched from ${OLD} -> ${NEW}"
           kubectl get pods -l app=lugx-frontend
-          
-          kubectl apply -f ~/lugx-frontend/deployement-iit-nginx-image.yml
-          kubectl rollout status deployment/lugx-frontend --timeout=180s
-          kubectl patch svc lugx-frontend -p "{\"spec\":{\"selector\":{\"color\":\"${NEW_COLOR}\"}}}"
-          kubectl scale deployment/lugx-frontend-$CURRENT_COLOR --replicas=0
 
           echo "=== VERIFICATION ==="
           kubectl get pods
