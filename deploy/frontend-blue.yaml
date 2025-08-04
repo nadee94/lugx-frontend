@@ -1,0 +1,16 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lugx-frontend-blue
+spec:
+  replicas: 2
+  selector:
+    matchLabels: { app: lugx-frontend, color: blue }
+  template:
+    metadata:
+      labels: { app: lugx-frontend, color: blue }
+    spec:
+      containers:
+      - name: frontend
+        image: nadeeshadulanjanee/lugx-frontend:e70fb880443cc48d7e09508ebc7a6c792b62ec48
+        ports: [{ containerPort: 80 }]

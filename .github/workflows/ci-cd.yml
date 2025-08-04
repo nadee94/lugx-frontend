@@ -67,18 +67,68 @@ jobs:
           kubectl rollout status deployment/order-service --timeout=180s
           
           echo "=== BLUE-GREEN FRONTEND DEPLOYMENT ==="
-          CURRENT_COLOR=$(kubectl get svc lugx-frontend -o jsonpath='{.spec.selector.color}' || echo "blue")
-          
-          if [ "$CURRENT_COLOR" = "blue" ]; then
-            NEW_COLOR="green"
-          else
-            NEW_COLOR="blue"
-          fi
-          
-          kubectl apply -f ~/lugx-frontend/deployement-iit-nginx-image.yml
-          kubectl rollout status deployment/lugx-frontend --timeout=180s
-          kubectl patch svc lugx-frontend -p "{\"spec\":{\"selector\":{\"color\":\"${NEW_COLOR}\"}}}"
-          kubectl scale deployment/lugx-frontend-$CURRENT_COLOR --replicas=0
+    - name: Deploy Blue-Green Frontend
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USER }}
+        key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+        script: |
+          set -e
+          WORK_DIR=~/lugx-frontend/deploy
+          IMAGE=${{ secrets.DOCKER_USERNAME }}/lugx-frontend:${{ github.sha }}
+          mkdir -p "$WORK_DIR"
+
+          # decide next colour
+          CURRENT=$(kubectl get svc lugx-frontend -o jsonpath='{.spec.selector.color}' 2>/dev/null || echo "blue")
+          [ "$CURRENT" = "blue" ] && NEW=green || NEW=blue
+          OLD=$CURRENT
+
+          # generate NEW colour deployment in-line
+          cat > "$WORK_DIR/frontend-${NEW}.yaml" <<EOF
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: lugx-frontend-${NEW}
+          spec:
+            replicas: 2
+            selector:
+              matchLabels: { app: lugx-frontend, color: ${NEW} }
+            template:
+              metadata:
+                labels: { app: lugx-frontend, color: ${NEW} }
+              spec:
+                containers:
+                - name: frontend
+                  image: ${IMAGE}
+                  ports: [{ containerPort: 80 }]
+          EOF
+
+          # create/update service once
+          cat > "$WORK_DIR/frontend-svc.yaml" <<EOF
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: lugx-frontend
+          spec:
+            type: LoadBalancer
+            selector: { app: lugx-frontend, color: ${NEW} }
+            ports: [{ port: 80, targetPort: 80 }]
+          EOF
+
+          # apply both
+          kubectl apply -f "$WORK_DIR/frontend-${NEW}.yaml"
+          kubectl apply -f "$WORK_DIR/frontend-svc.yaml"
+          kubectl rollout status deployment/lugx-frontend-${NEW} --timeout=180s
+
+          # switch traffic
+          kubectl patch svc lugx-frontend -p "{\"spec\":{\"selector\":{\"color\":\"${NEW}\"}}}"
+
+          # scale old colour to zero
+          kubectl scale deployment/lugx-frontend-${OLD} --replicas=0 2>/dev/null || true
+
+          echo "Frontend switched from ${OLD} -> ${NEW}"
+          kubectl get pods -l app=lugx-frontend
 
           echo "=== VERIFICATION ==="
           kubectl get pods

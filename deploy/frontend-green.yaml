@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lugx-frontend-green
+spec:
+  replicas: 2
+  selector:
+    matchLabels: { app: lugx-frontend, color: green }
+  template:
+    metadata:
+      labels: { app: lugx-frontend, color: green }
+    spec:
+      containers:
+      - name: frontend
+        image: nadeeshadulanjanee/lugx-frontend:dbe718ebf53508c237547b83316b762f94536bc6
+        ports: [{ containerPort: 80 }]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lugx-frontend
+spec:
+  type: LoadBalancer
+  selector: { app: lugx-frontend, color: green }
+  ports: [{ port: 80, targetPort: 80 }]
