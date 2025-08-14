@@ -12,5 +12,5 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: nadeeshadulanjanee/lugx-frontend:2ca847642a272f8b34eb15d9818ed19f16386d8a
+        image: nadeeshadulanjanee/lugx-frontend:9daf68b800dc1eafa94d8de3a99f0a70e10ddc92
         ports: [{ containerPort: 80 }]
