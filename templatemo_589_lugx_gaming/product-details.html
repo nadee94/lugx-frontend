@@ -222,14 +222,29 @@ https://templatemo.com/tm-589-lugx-gaming
 
 
 
+  <!-- force scrollable page -->
+  <div style="height:200vh"></div>
 
-<!-- existing page-view snippet -->
+
+
+<script>
+/* polyfill */
+if (!window.crypto?.randomUUID) {
+  window.crypto.randomUUID = () =>
+    ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+      (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16));
+}
+</script>
+
+
+
+
 <script>
 (() => {
   const uid = localStorage.getItem('lugx_uid') || ('u_' + Math.random().toString(36).slice(2, 10));
   localStorage.setItem('lugx_uid', uid);
 
-  fetch('http://app.iit.cloud/event', {
+  fetch('/event', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -249,7 +264,7 @@ https://templatemo.com/tm-589-lugx-gaming
   sessionStorage.setItem('lugx_sid', sid);
 
   const send = (ev, extra = {}) =>
-    fetch('http://app.iit.cloud/event', {
+    fetch('/event', {
       method: 'POST',
       keepalive: true,
       headers: { 'Content-Type': 'application/json' },
@@ -265,14 +280,17 @@ https://templatemo.com/tm-589-lugx-gaming
   /* ---- scroll depth ---- */
   let maxPct = 0;
   const onScroll = () => {
-    const pct = Math.round(
-      (window.scrollY + window.innerHeight) /
-      document.documentElement.scrollHeight * 100
-    );
-    if (pct > maxPct) {
-      maxPct = pct;
-      send('scroll', {scroll_depth: pct});
-    }
+        const available = document.documentElement.scrollHeight - window.innerHeight;
+if (available <= 0) return;              // nothing to scroll
+
+const pct = Math.max(1, Math.round(window.scrollY / available * 100));
+if (pct > maxPct) {
+  maxPct = pct;
+  send('scroll', { scroll_depth: pct });
+}
+
+
+
   };
   window.addEventListener('scroll', onScroll, {passive: true});
 
@@ -288,7 +306,6 @@ https://templatemo.com/tm-589-lugx-gaming
   });
 })();
 </script>
-
 
 </body>
 
