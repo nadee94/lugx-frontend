@@ -76,7 +76,7 @@ jobs:
         script: |
           set -e
           WORK_DIR=~/lugx-frontend/deploy
-          IMAGE=${{ secrets.DOCKER_USERNAME }}/lugx-frontend:${{ github.sha }}
+          IMAGE=${{ secrets.DOCKER_USERNAME }}/iit-nginx-static:${{ github.sha }}
           mkdir -p "$WORK_DIR"
 
           # decide next colour
