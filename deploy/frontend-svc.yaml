@@ -4,5 +4,5 @@ metadata:
   name: lugx-frontend
 spec:
   type: LoadBalancer
-  selector: { app: lugx-frontend, color: blue }
+  selector: { app: lugx-frontend, color: green }
   ports: [{ port: 80, targetPort: 80 }]

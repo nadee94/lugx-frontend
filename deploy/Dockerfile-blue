@@ -1,0 +1,7 @@
+FROM nginx:alpine
+COPY ../templatemo_589_lugx_gaming /usr/share/nginx/html
+RUN echo '<!doctype html><h1 style="background:blue;color:white;padding:4px">BLUE</h1>' > /usr/share/nginx/html/colour.html
+EXPOSE 80
+
+
+

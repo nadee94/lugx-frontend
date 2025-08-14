@@ -3,7 +3,7 @@ class LugxTracker {
   constructor() {
     this.sessionId = this.generateId();
     this.currentPage = window.location.pathname;
-    this.analyticsEndpoint = '/api/track'; // Using relative path for same-domain
+    this.analyticsEndpoint = '/event'; // Using relative path for same-domain
     this.init();
   }
 

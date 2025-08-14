@@ -12,14 +12,5 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: nadeeshadulanjanee/lugx-frontend:dbe718ebf53508c237547b83316b762f94536bc6
+        image: nadeeshadulanjanee/lugx-frontend:2ca847642a272f8b34eb15d9818ed19f16386d8a
         ports: [{ containerPort: 80 }]
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: lugx-frontend
-spec:
-  type: LoadBalancer
-  selector: { app: lugx-frontend, color: green }
-  ports: [{ port: 80, targetPort: 80 }]

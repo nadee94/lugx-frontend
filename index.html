@@ -430,19 +430,65 @@ https://templatemo.com/tm-589-lugx-gaming
   const uid = localStorage.getItem('lugx_uid') || ('u_' + Math.random().toString(36).slice(2, 10));
   localStorage.setItem('lugx_uid', uid);
 
-  fetch('http://app.iit.cloud/event', {
+  fetch('/event', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       event: 'page_view',
-      path: window.location.pathname + window.location.search, // real page
+      path: window.location.pathname + window.location.search,
       user_id: uid
     })
   }).catch(console.error);
 })();
 </script>
 
+<!-- NEW: scroll + session-time -->
+<script>
+(() => {
+  const uid = localStorage.getItem('lugx_uid');
+  const sid = sessionStorage.getItem('lugx_sid') || crypto.randomUUID();
+  sessionStorage.setItem('lugx_sid', sid);
 
+  const send = (ev, extra = {}) =>
+    fetch('/event', {
+      method: 'POST',
+      keepalive: true,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        event: ev,
+        session_id: sid,
+        user_id: uid,
+        path: location.pathname + location.search,
+        ...extra
+      })
+    }).catch(()=>{});
+
+  /* ---- scroll depth ---- */
+  let maxPct = 0;
+  const onScroll = () => {
+    const pct = Math.round(
+      (window.scrollY + window.innerHeight) /
+      document.documentElement.scrollHeight * 100
+    );
+    if (pct > maxPct) {
+      maxPct = pct;
+      send('scroll', {scroll_depth: pct});
+    }
+  };
+  window.addEventListener('scroll', onScroll, {passive: true});
+
+  /* ---- active time ---- */
+  let activeMs = 0, timer;
+  const start = () => { timer = setInterval(() => activeMs += 1000, 1000); };
+  ['mousemove', 'keydown', 'scroll', 'click']
+    .forEach(e => window.addEventListener(e, start, {once: true}));
+
+  window.addEventListener('beforeunload', () => {
+    clearInterval(timer);
+    send('time_on_page', {session_time: Math.round(activeMs / 1000)});
+  });
+})();
+</script>
 
 
  // Simple tracking - runs on page load
