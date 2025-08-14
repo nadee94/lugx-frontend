@@ -25,11 +25,11 @@ jobs:
     - name: Build and Push Frontend Image
       uses: docker/build-push-action@v4
       with:
-        context: .
+        context: ./lugx-frontend
         push: true
         tags: |
-          ${{ secrets.DOCKER_USERNAME }}/lugx-frontend:${{ github.sha }}
-          ${{ secrets.DOCKER_USERNAME }}/lugx-frontend:latest
+          ${{ secrets.DOCKER_USERNAME }}/iit-nginx-static:${{ github.sha }}
+          ${{ secrets.DOCKER_USERNAME }}/iit-nginx-static:latest
 
     # Build and push order service
     - name: Build and Push Order Service Image
