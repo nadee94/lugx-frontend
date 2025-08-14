@@ -12,5 +12,5 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: nadeeshadulanjanee/iit-nginx-static:f3885e8ac15b8f41deb151ad9f2f1538363fc844
+        image: nadeeshadulanjanee/iit-nginx-static:218591145b61391ad3890c1754fc537eeaadca30
         ports: [{ containerPort: 80 }]
