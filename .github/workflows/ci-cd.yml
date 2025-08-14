@@ -25,7 +25,7 @@ jobs:
     - name: Build and Push Frontend Image
       uses: docker/build-push-action@v4
       with:
-        context: ./lugx-frontend
+        context: .
         push: true
         tags: |
           ${{ secrets.DOCKER_USERNAME }}/iit-nginx-static:${{ github.sha }}
