@@ -1,0 +1,32 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+
+# dotenv environment variables
+.env
+
+# node_modules folder
+node_modules/
+
+# Build output
+dist/
+build/
+
+# Docker
+*.local
+docker-compose.override.yml
+
+# VSCode settings
+.vscode/
+
+# Optional npm cache
+.npm/
+
+# Coverage directory
+coverage/

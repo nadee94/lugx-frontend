@@ -1,0 +1,6 @@
+{
+  "fileLocations": [
+    { "URIPrefixes": ["s3://iit-analytics-1754144800/"] }
+  ],
+  "globalUploadSettings": { "format": "Parquet" }
+}

@@ -1,0 +1,54 @@
+[2025-08-02T04:49:42.990Z][WARN][@clickhouse/client][Config] "host" is deprecated. Use "url" instead.
+Analytics on :3000
+ClickHouseError: Cannot parse input: expected '"' before: '.546Z"}\n': (while reading the value of key ts): (at row 1)
+: While executing ParallelParsingBlockInputFormat. 
+    at parseError (/home/ec2-user/lugx-analytics/node_modules/@clickhouse/client-common/dist/error/error.js:38:16)
+    at ClientRequest.onResponse (/home/ec2-user/lugx-analytics/node_modules/@clickhouse/client/dist/connection/node_base_connection.js:443:107)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+  code: '27',
+  type: 'CANNOT_PARSE_INPUT_ASSERTION_FAILED'
+}
+[2025-08-02T04:53:13.721Z][WARN][@clickhouse/client][Config] "host" is deprecated. Use "url" instead.
+Analytics on :3000
+ClickHouseError: Cannot parse input: expected '"' before: '.155Z"}\n': (while reading the value of key ts): (at row 1)
+: While executing ParallelParsingBlockInputFormat. 
+    at parseError (/home/ec2-user/lugx-analytics/node_modules/@clickhouse/client-common/dist/error/error.js:38:16)
+    at ClientRequest.onResponse (/home/ec2-user/lugx-analytics/node_modules/@clickhouse/client/dist/connection/node_base_connection.js:443:107)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+  code: '27',
+  type: 'CANNOT_PARSE_INPUT_ASSERTION_FAILED'
+}
+ClickHouseError: Cannot parse input: expected '"' before: '.417Z"}\n': (while reading the value of key ts): (at row 1)
+: While executing ParallelParsingBlockInputFormat. 
+    at parseError (/home/ec2-user/lugx-analytics/node_modules/@clickhouse/client-common/dist/error/error.js:38:16)
+    at ClientRequest.onResponse (/home/ec2-user/lugx-analytics/node_modules/@clickhouse/client/dist/connection/node_base_connection.js:443:107)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+  code: '27',
+  type: 'CANNOT_PARSE_INPUT_ASSERTION_FAILED'
+}
+Analytics on :3000
+node:events:495
+      throw er; // Unhandled 'error' event
+      ^
+
+Error: listen EADDRINUSE: address already in use :::3000
+    at Server.setupListenHandle [as _listen2] (node:net:1817:16)
+    at listenInCluster (node:net:1865:12)
+    at Server.listen (node:net:1953:7)
+    at Function.listen (/home/ec2-user/lugx-analytics/node_modules/express/lib/application.js:635:24)
+    at file:///home/ec2-user/lugx-analytics/index.js:27:5
+    at ModuleJob.run (node:internal/modules/esm/module_job:195:25)
+    at async ModuleLoader.import (node:internal/modules/esm/loader:337:24)
+    at async loadESM (node:internal/process/esm_loader:34:7)
+    at async handleMainPromise (node:internal/modules/run_main:106:12)
+Emitted 'error' event on Server instance at:
+    at emitErrorNT (node:net:1844:8)
+    at process.processTicksAndRejections (node:internal/process/task_queues:82:21) {
+  code: 'EADDRINUSE',
+  errno: -98,
+  syscall: 'listen',
+  address: '::',
+  port: 3000
+}
+
+Node.js v18.20.8
